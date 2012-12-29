@@ -1,0 +1,5 @@
+syslog-ng and rsyslog configuration to logs centralization by host, year,
+month, day and hour.
+
+bz2 compression for files older than a day (with no modifications)
+

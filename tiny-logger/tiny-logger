@@ -1,0 +1,70 @@
+#!/usr/bin/python
+
+import sys
+import os
+import yaml
+
+sys.path.append('/usr/share/tiny-logger/')
+
+from TinyLogger.Crypt import Crypt as LoggerCrypt
+from TinyLogger.Index import Index as LoggerIndex
+from TinyLogger.Search import Search as LoggerSearch
+
+
+def usage():
+    print "Usage: "
+    print "%s sign <input_file>" % (sys.argv[0])
+    print "%s forcesign <input_file>" % (sys.argv[0])
+    print "%s verify <input_file>" % (sys.argv[0])
+    print "%s index <input_file>" % (sys.argv[0])
+    print "%s search <query1 query2 ..>" % (sys.argv[0])
+    sys.exit(1)
+
+
+def get_sign_file(filename):
+    sign_file = filename
+    if filename.endswith('.bz2'):
+        sign_file = filename.split('.bz2')[0]
+    elif filename.endswith('.gz'):
+        sign_file = filename.split('.gz')[0]
+    sign_file += ".sign"
+    return sign_file
+
+if len(sys.argv) < 3:
+    usage()
+
+opt = sys.argv[1]
+filename = sys.argv[2]
+
+config = yaml.load(open('config'))
+
+if opt == 'sign':
+    c = LoggerCrypt(config['crypt']['crypto_algorithm'],
+                    config['crypt']['secret_shared_key'])
+    if not os.path.exists("%s.sign" % (filename)):
+        print c.sign_file(filename)
+    else:
+        print "Signature of file [%s] already exists" % (filename)
+
+elif opt == 'forcesign':
+    c = LoggerCrypt(config['crypt']['crypto_algorithm'],
+                    config['crypt']['secret_shared_key'])
+    print c.sign_file(filename)
+
+elif opt == 'verify':
+    c = LoggerCrypt(config['crypt']['crypto_algorithm'],
+                    config['crypt']['secret_shared_key'])
+    print "Signature verification:",
+    sign_filename = get_sign_file(filename)
+    print c.validate(filename, sign_filename)
+
+elif opt == "index":
+    indexer = LoggerIndex(config['index']["database_path"])
+    indexer.index(filename)
+
+elif opt == "search":
+    search = LoggerSearch(config['index']["database_path"])
+    search.search(sys.argv[2:])
+
+else:
+    usage()

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+LOGDIR=/var/log/tiny-logger
+LOGGER=`which tiny-logger`
+
+# Sign&Index log files not changed in more than 1 hour and less than 3 hours:
+find $LOGDIR -name *.log -mmin +60 -mmin -180 -exec $LOGGER sign {} \;
+find $LOGDIR -name *.log -mmin +60 -mmin -180 -exec $LOGGER index {} \;
+
+# Compress log files not changed in more than 24 hours:
+find $LOGDIR -type f -mmin +1440  -name "*.log" -exec gzip '{}' \;
+
